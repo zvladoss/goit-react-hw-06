@@ -1,55 +1,39 @@
-import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { changeFilter } from "./redux/filtersSlice";
+import { selectNameFilter } from "./redux/filtersSlice";
 import ContactList from "./components/ContactList/ContactList";
 import Container from "./components/Container/Container";
 import SearchBox from "./components/SearchBox/SearchBox";
 import ContactForm from "./components/ContactForm/ContactForm";
-
-const INITIAL_CONTACTS = [
-  { id: "id-1", name: "Rosie Simpson", number: "459-12-56" },
-  { id: "id-2", name: "Hermione Kline", number: "443-89-12" },
-  { id: "id-3", name: "Eden Clements", number: "645-17-79" },
-  { id: "id-4", name: "Annie Copeland", number: "227-91-26" },
-];
+import { addContact, deleteContact } from "./redux/contactsSlice";
+import { selectFilteredContacts } from "./redux/contactsSlice";
 
 const App = () => {
-  const [contactsData, setContacts] = useState(() => {
-    try {
-      return (
-        JSON.parse(localStorage.getItem("contacts-data")) || INITIAL_CONTACTS
-      );
-    } catch (error) {
-      console.log(error);
-      return INITIAL_CONTACTS;
-    }
-  });
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-    localStorage.setItem("contacts-data", JSON.stringify(contactsData));
-  }, [contactsData]);
-  const [searchData, setSearchData] = useState("");
+  const filteredContacts = useSelector(selectFilteredContacts);
+  const searchData = useSelector(selectNameFilter);
 
-  const addContact = (newContact) => {
-    setContacts((prevContacts) => [...prevContacts, newContact]);
+  const addNewContact = (newContact) => {
+    dispatch(addContact(newContact));
   };
 
   const handleSearchInput = (event) => {
-    setSearchData(event.target.value);
+    dispatch(changeFilter(event.target.value));
   };
 
-  const findContact = contactsData.filter((contact) =>
-    contact.name.toLowerCase().includes(searchData.toLowerCase())
-  );
-
-  const deleteContact = (id) => {
-    setContacts((prev) => prev.filter((contact) => contact.id !== id));
-  };
+  useEffect(() => {}, [filteredContacts]);
 
   return (
     <Container>
       <h1>Phonebook</h1>
-      <ContactForm addContact={addContact} />
+      <ContactForm addContact={addNewContact} />
       <SearchBox searchData={searchData} onSearchInput={handleSearchInput} />
-      <ContactList contactsData={findContact} onDeleteContact={deleteContact} />
+      <ContactList
+        contactsData={filteredContacts}
+        onDeleteContact={(id) => dispatch(deleteContact(id))}
+      />
     </Container>
   );
 };
